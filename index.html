@@ -29,4 +29,44 @@
       </tr>
     </thead>
     <tbody>
-      <!-- İlk
+      <tr>
+        <td contenteditable="true" data-placeholder="Durak ID"></td>
+        <td contenteditable="true" data-placeholder="Durak Adı"></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <button onclick="generateQRCodes()">QR Kodları Oluştur ve İndir (ZIP)</button>
+
+  <script>
+    async function generateQRCodes() {
+      const table = document.getElementById('dataTable');
+      const rows = table.querySelectorAll('tbody tr');
+      const zip = new JSZip();
+
+      for (let i = 0; i < rows.length; i++) {
+        const cells = rows[i].querySelectorAll('td');
+        const durakID = cells[0]?.innerText.trim();
+        const durakAdi = cells[1]?.innerText.trim();
+
+        if (durakID && durakAdi) {
+          const qrText = `https://durak.example.com?id=${encodeURIComponent(durakID)}&name=${encodeURIComponent(durakAdi)}`;
+          
+          const dataUrl = await QRCode.toDataURL(qrText);
+          const imgData = dataUrl.split(',')[1]; // base64 verisi
+          zip.file(`${durakID}_${durakAdi}.png`, imgData, { base64: true });
+        }
+      }
+
+      if (Object.keys(zip.files).length === 0) {
+        alert('Lütfen en az bir geçerli satır girin.');
+        return;
+      }
+
+      zip.generateAsync({ type: 'blob' }).then(content => {
+        saveAs(content, 'qr_kodlari.zip');
+      });
+    }
+  </script>
+</body>
+</html>
