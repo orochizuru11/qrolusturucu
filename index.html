@@ -1,30 +1,46 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Durak QR Kod Oluşturucu</title>
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <style>
-    body { font-family: sans-serif; padding: 20px; text-align: center; }
-    table { border-collapse: collapse; margin: auto; margin-top: 20px; }
-    th, td {
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      text-align: center;
+    }
+    table {
+      border-collapse: collapse;
+      margin: auto;
+      margin-top: 20px;
+    }
+    th,
+    td {
       border: 1px solid #ccc;
       padding: 8px;
       min-width: 150px;
     }
-    td { outline: none; }
+    td {
+      outline: none;
+    }
     td[contenteditable="true"]:empty:before {
       content: attr(data-placeholder);
       color: #aaa;
     }
-    button { padding: 10px 20px; font-size: 16px; margin-top: 20px; }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-top: 20px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
   <h2>Durak Bilgileri (Excel Gibi)</h2>
-  <p>📝 Excel'den verileri yapıştırın veya manuel girin. Ardından QR kodlarını oluşturun.</p>
+  <p>📝 Excel'den verileri yapıştırın veya manuel girin. Ardından QR kodlarını oluşturup ZIP olarak indirin.</p>
 
   <table id="durakTablosu">
     <thead>
@@ -46,8 +62,8 @@
   <script>
     const tablo = document.getElementById("durakTablosu").getElementsByTagName("tbody")[0];
 
-    // Satır yazıldıkça yeni satır ekle
-    tablo.addEventListener("input", function () {
+    // Otomatik satır ekleme
+    tablo.addEventListener("input", () => {
       const satirlar = tablo.querySelectorAll("tr");
       const sonSatir = satirlar[satirlar.length - 1];
       const td1 = sonSatir.cells[0].textContent.trim();
@@ -70,17 +86,17 @@
       }
     });
 
-    // Excel'den yapıştırma desteği
-    tablo.addEventListener("paste", function (e) {
+    // Excel'den yapıştırma işlemi
+    tablo.addEventListener("paste", (e) => {
       e.preventDefault();
 
       const clipboardData = e.clipboardData || window.clipboardData;
       const pastedText = clipboardData.getData("text");
 
-      const rows = pastedText.split("\n").filter(row => row.trim() !== "");
-      const parsed = rows.map(row => row.split("\t"));
+      const rows = pastedText.split("\n").filter((row) => row.trim() !== "");
+      const parsed = rows.map((row) => row.split("\t"));
 
-      parsed.forEach(cells => {
+      parsed.forEach((cells) => {
         if (cells.length === 0) return;
 
         const tr = document.createElement("tr");
@@ -100,7 +116,7 @@
         tablo.appendChild(tr);
       });
 
-      // Boş satır ekle
+      // Yeni boş satır ekle
       const yeniSatir = document.createElement("tr");
       const yeniTd1 = document.createElement("td");
       yeniTd1.contentEditable = "true";
@@ -113,7 +129,7 @@
       tablo.appendChild(yeniSatir);
     });
 
-    // QR Kodları oluştur
+    // QR kodlarını oluştur ve ZIP dosyası indir
     async function qrKodlariOlustur() {
       const satirlar = tablo.querySelectorAll("tr");
       const zip = new JSZip();
@@ -127,7 +143,8 @@
           const link = `kkmugla://?type=stop&id=${encodeURIComponent(durakID)}`;
           const dosyaAdi = `${durakID} ${durakAdi}.png`;
 
-          const qrDataUrl = await QRCode.toDataURL(link);
+          // 450x450 px boyutunda QR kod oluştur
+          const qrDataUrl = await QRCode.toDataURL(link, { width: 450 });
           const imgBase64 = qrDataUrl.split(",")[1];
 
           zip.file(dosyaAdi, imgBase64, { base64: true });
