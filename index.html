@@ -10,16 +10,16 @@
     body { font-family: sans-serif; padding: 20px; text-align: center; }
     table { border-collapse: collapse; margin: auto; }
     th, td { border: 1px solid #ccc; padding: 8px; min-width: 150px; }
-    td { outline: none; }
-    td[contenteditable="true"]:empty:before {
-      content: attr(data-placeholder);
-      color: #aaa;
-    }
+    textarea { width: 400px; height: 100px; margin-top: 20px; }
     button { padding: 10px 20px; font-size: 16px; margin-top: 20px; }
   </style>
 </head>
 <body>
-  <h2>Durak Bilgisi Girişi (Excel'den yapıştır destekli)</h2>
+  <h2>Durak Bilgisi Girişi</h2>
+  <p>Excel'den 2 sütun (Durak ID ve Durak Adı) kopyalayıp aşağıya yapıştır:</p>
+  <textarea id="pasteArea" placeholder="Buraya yapıştırın (örnek: 70052[TAB]Yeniköy)..."></textarea><br>
+  <button onclick="parseData()">Tabloya Aktar</button>
+
   <table id="dataTable">
     <thead>
       <tr>
@@ -28,17 +28,43 @@
       </tr>
     </thead>
     <tbody>
-      <tr>
-        <td contenteditable="true" data-placeholder="Durak ID" oninput="checkRow(this)"></td>
-        <td contenteditable="true" data-placeholder="Durak Adı" oninput="checkRow(this)"></td>
-      </tr>
     </tbody>
   </table>
 
   <button onclick="generateAndDownloadQRCodes()">Tüm QR Kodlarını İndir (.zip)</button>
 
   <script>
-    function checkRow(cell) {
-      const row = cell.parentElement;
-      const table = document.querySelector("#dataTable tbody");
-      const lastRow = table.rows[table.rows.length -]()
+    function parseData() {
+      const input = document.getElementById("pasteArea").value.trim();
+      const rows = input.split(/\r?\n/);
+      const tbody = document.querySelector("#dataTable tbody");
+      tbody.innerHTML = ""; // önceki verileri temizle
+
+      rows.forEach(row => {
+        const cells = row.split(/\t/); // TAB ayırıcı
+        if (cells.length >= 2) {
+          const tr = document.createElement("tr");
+          const td1 = document.createElement("td");
+          const td2 = document.createElement("td");
+          td1.textContent = cells[0].trim();
+          td2.textContent = cells[1].trim();
+          tr.appendChild(td1);
+          tr.appendChild(td2);
+          tbody.appendChild(tr);
+        }
+      });
+    }
+
+    async function generateAndDownloadQRCodes() {
+      const rows = document.querySelectorAll("#dataTable tbody tr");
+      const zip = new JSZip();
+      const folder = zip.folder("QR_Kodlari");
+      let count = 0;
+
+      for (const row of rows) {
+        const id = row.cells[0]?.textContent?.trim();
+        const name = row.cells[1]?.textContent?.trim();
+        if (id && name) {
+          const url = `kkmugla://?type=stop&id=${id}`;
+          const canvas = document.createElement("canvas");
+          await QRCode.toCanvas(canvas,
