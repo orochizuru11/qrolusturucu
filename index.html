@@ -39,34 +39,23 @@
   <button onclick="generateQRCodes()">QR Kodları Oluştur ve İndir (ZIP)</button>
 
   <script>
-    async function generateQRCodes() {
-      const table = document.getElementById('dataTable');
-      const rows = table.querySelectorAll('tbody tr');
-      const zip = new JSZip();
+    const tbody = document.querySelector("#dataTable tbody");
 
-      for (let i = 0; i < rows.length; i++) {
-        const cells = rows[i].querySelectorAll('td');
-        const durakID = cells[0]?.innerText.trim();
-        const durakAdi = cells[1]?.innerText.trim();
+    // Yapıştırma olayını özel olarak yakala
+    tbody.addEventListener("paste", function (e) {
+      e.preventDefault();
 
-        if (durakID && durakAdi) {
-          const qrText = `https://durak.example.com?id=${encodeURIComponent(durakID)}&name=${encodeURIComponent(durakAdi)}`;
-          
-          const dataUrl = await QRCode.toDataURL(qrText);
-          const imgData = dataUrl.split(',')[1]; // base64 verisi
-          zip.file(`${durakID}_${durakAdi}.png`, imgData, { base64: true });
-        }
-      }
+      const clipboardData = e.clipboardData || window.clipboardData;
+      const pastedData = clipboardData.getData("Text");
 
-      if (Object.keys(zip.files).length === 0) {
-        alert('Lütfen en az bir geçerli satır girin.');
-        return;
-      }
+      const rows = pastedData.split("\n").filter(row => row.trim() !== "");
 
-      zip.generateAsync({ type: 'blob' }).then(content => {
-        saveAs(content, 'qr_kodlari.zip');
-      });
-    }
-  </script>
-</body>
-</html>
+      // Var olan satırları temizle
+      tbody.innerHTML = "";
+
+      rows.forEach(row => {
+        const cols = row.split("\t");
+        const tr = document.createElement("tr");
+
+        const td1 = document.createElement("td");
+        td1.contentEditable = "true";
