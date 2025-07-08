@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>QR Kod Oluşturucu</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; text-align: center; }
+    input, button { padding: 10px; width: 300px; margin: 10px; }
+    canvas { margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>QR Kod Oluşturucu</h1>
+  <input type="text" id="qrInput" placeholder="Metin, URL vs. yazın" />
+  <br>
+  <button onclick="generateQR()">QR Kod Oluştur</button>
+  <br>
+  <canvas id="qrCanvas"></canvas>
+
+  <script>
+    function generateQR() {
+      const input = document.getElementById("qrInput").value;
+      const canvas = document.getElementById("qrCanvas");
+      QRCode.toCanvas(canvas, input, { width: 256 }, function (error) {
+        if (error) console.error(error);
+      });
+    }
+  </script>
+</body>
+</html>
