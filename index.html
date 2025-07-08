@@ -9,13 +9,17 @@
   <style>
     body { font-family: sans-serif; padding: 20px; text-align: center; }
     table { border-collapse: collapse; margin: auto; }
-    th, td { border: 1px solid #ccc; padding: 8px; min-width: 150px; text-align: left; }
-    input { width: 100%; border: none; outline: none; }
+    th, td { border: 1px solid #ccc; padding: 8px; min-width: 150px; }
+    td { outline: none; }
+    td[contenteditable="true"]:empty:before {
+      content: attr(data-placeholder);
+      color: #aaa;
+    }
     button { padding: 10px 20px; font-size: 16px; margin-top: 20px; }
   </style>
 </head>
 <body>
-  <h2>Durak Bilgisi Girişi</h2>
+  <h2>Durak Bilgisi Girişi (Excel'den yapıştır destekli)</h2>
   <table id="dataTable">
     <thead>
       <tr>
@@ -25,8 +29,8 @@
     </thead>
     <tbody>
       <tr>
-        <td><input type="text" oninput="checkRow(this)"></td>
-        <td><input type="text" oninput="checkRow(this)"></td>
+        <td contenteditable="true" data-placeholder="Durak ID" oninput="checkRow(this)"></td>
+        <td contenteditable="true" data-placeholder="Durak Adı" oninput="checkRow(this)"></td>
       </tr>
     </tbody>
   </table>
@@ -34,58 +38,7 @@
   <button onclick="generateAndDownloadQRCodes()">Tüm QR Kodlarını İndir (.zip)</button>
 
   <script>
-    function checkRow(input) {
-      const row = input.parentElement.parentElement;
-      const table = document.getElementById("dataTable").getElementsByTagName("tbody")[0];
-      const lastRow = table.rows[table.rows.length - 1];
-      if (row === lastRow) {
-        const newRow = table.insertRow();
-        for (let i = 0; i < 2; i++) {
-          const cell = newRow.insertCell();
-          const input = document.createElement("input");
-          input.type = "text";
-          input.oninput = function () { checkRow(this); };
-          cell.appendChild(input);
-        }
-      }
-    }
-
-    async function generateAndDownloadQRCodes() {
-      const rows = document.querySelectorAll("#dataTable tbody tr");
-      const zip = new JSZip();
-      const folder = zip.folder("QR_Kodlari");
-
-      let count = 0;
-      for (const row of rows) {
-        const id = row.cells[0]?.querySelector("input")?.value?.trim();
-        const name = row.cells[1]?.querySelector("input")?.value?.trim();
-
-        if (id && name) {
-          const url = `kkmugla://?type=stop&id=${id}`;
-          const canvas = document.createElement("canvas");
-
-          await QRCode.toCanvas(canvas, url, { width: 500 });
-
-          const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
-          const filename = `${sanitizeFilename(name)}_${id}.png`;
-          folder.file(filename, blob);
-          count++;
-        }
-      }
-
-      if (count === 0) {
-        alert("Lütfen en az bir geçerli durak ID ve adı girin.");
-        return;
-      }
-
-      zip.generateAsync({ type: "blob" }).then(content => {
-        saveAs(content, "durak_qr_kodlari.zip");
-      });
-    }
-
-    function sanitizeFilename(name) {
-      return name.replace(/[<>:"\/\\|?*]+/g, "_").replace(/\s+/g, "_");
-    }
-  </script>
-</body>
-</html>
+    function checkRow(cell) {
+      const row = cell.parentElement;
+      const table = document.querySelector("#dataTable tbody");
+      const lastRow = table.rows[table.rows.length -]()
