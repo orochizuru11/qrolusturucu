@@ -2,26 +2,29 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <title>Durak QR Kod Oluşturucu</title>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <title>Excel Benzeri Durak Tablosu</title>
   <style>
     body { font-family: sans-serif; padding: 20px; text-align: center; }
-    table { border-collapse: collapse; margin: auto; }
-    th, td { border: 1px solid #ccc; padding: 8px; min-width: 150px; }
-    td { outline: none; }
+    table { border-collapse: collapse; margin: auto; margin-top: 20px; }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      min-width: 150px;
+    }
+    td {
+      outline: none;
+    }
     td[contenteditable="true"]:empty:before {
       content: attr(data-placeholder);
       color: #aaa;
     }
-    button { padding: 10px 20px; font-size: 16px; margin-top: 20px; }
   </style>
 </head>
 <body>
-  <h2>Durak Tablosu (Excel'den kopyala/yapıştır destekli)</h2>
+  <h2>Durak Bilgileri (Excel Gibi)</h2>
+  <p>📝 Excel'den kopyala → buraya yapıştır, ya da elle gir</p>
 
-  <table id="dataTable">
+  <table id="durakTablosu">
     <thead>
       <tr>
         <th>Durak ID</th>
@@ -36,26 +39,75 @@
     </tbody>
   </table>
 
-  <button onclick="generateQRCodes()">QR Kodları Oluştur ve İndir (ZIP)</button>
-
   <script>
-    const tbody = document.querySelector("#dataTable tbody");
+    const tablo = document.getElementById("durakTablosu").getElementsByTagName("tbody")[0];
 
-    // Yapıştırma olayını özel olarak yakala
-    tbody.addEventListener("paste", function (e) {
+    // Satır yazıldıkça yeni satır ekleme
+    tablo.addEventListener("input", function () {
+      const satirlar = tablo.querySelectorAll("tr");
+      const sonSatir = satirlar[satirlar.length - 1];
+      const td1 = sonSatir.cells[0].textContent.trim();
+      const td2 = sonSatir.cells[1].textContent.trim();
+
+      if (td1 !== "" || td2 !== "") {
+        const yeniSatir = document.createElement("tr");
+
+        const tdID = document.createElement("td");
+        tdID.contentEditable = "true";
+        tdID.setAttribute("data-placeholder", "Durak ID");
+
+        const tdAdi = document.createElement("td");
+        tdAdi.contentEditable = "true";
+        tdAdi.setAttribute("data-placeholder", "Durak Adı");
+
+        yeniSatir.appendChild(tdID);
+        yeniSatir.appendChild(tdAdi);
+        tablo.appendChild(yeniSatir);
+      }
+    });
+
+    // Kopyala/Yapıştır desteği
+    tablo.addEventListener("paste", function (e) {
       e.preventDefault();
 
       const clipboardData = e.clipboardData || window.clipboardData;
-      const pastedData = clipboardData.getData("Text");
+      const pastedText = clipboardData.getData("text");
 
-      const rows = pastedData.split("\n").filter(row => row.trim() !== "");
+      const rows = pastedText.split("\n").filter(row => row.trim() !== "");
+      const parsed = rows.map(row => row.split("\t"));
 
-      // Var olan satırları temizle
-      tbody.innerHTML = "";
+      parsed.forEach(cells => {
+        if (cells.length === 0) return;
 
-      rows.forEach(row => {
-        const cols = row.split("\t");
         const tr = document.createElement("tr");
 
-        const td1 = document.createElement("td");
-        td1.contentEditable = "true";
+        const tdID = document.createElement("td");
+        tdID.contentEditable = "true";
+        tdID.setAttribute("data-placeholder", "Durak ID");
+        tdID.textContent = cells[0] || "";
+
+        const tdAdi = document.createElement("td");
+        tdAdi.contentEditable = "true";
+        tdAdi.setAttribute("data-placeholder", "Durak Adı");
+        tdAdi.textContent = cells[1] || "";
+
+        tr.appendChild(tdID);
+        tr.appendChild(tdAdi);
+        tablo.appendChild(tr);
+      });
+
+      // Boş satır ekle
+      const yeniSatir = document.createElement("tr");
+      const yeniTd1 = document.createElement("td");
+      yeniTd1.contentEditable = "true";
+      yeniTd1.setAttribute("data-placeholder", "Durak ID");
+      const yeniTd2 = document.createElement("td");
+      yeniTd2.contentEditable = "true";
+      yeniTd2.setAttribute("data-placeholder", "Durak Adı");
+      yeniSatir.appendChild(yeniTd1);
+      yeniSatir.appendChild(yeniTd2);
+      tablo.appendChild(yeniSatir);
+    });
+  </script>
+</body>
+</html>
